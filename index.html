@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Actas de Reuniones | Xactus</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&family=Poppins:wght@600;7700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #013e7b;
+            --accent-blue: #5C95FF;
+            --pure-white: #FFFEFF;
+            --light-accent: #BCDCD7;
+            --dark-bg: #0B0A09;
+            --card-bg: #141312;
+            --border-color: rgba(92, 149, 255, 0.2);
+            --success-color: #00C48C;
+            --font-primary: 'Lexend', sans-serif;
+            --font-display: 'Poppins', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-primary);
+            background-color: var(--dark-bg);
+            color: var(--pure-white);
+            line-height: 1.8;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 25px;
+        }
+
+        .section {
+            padding: 80px 0;
+        }
+        
+        header {
+            padding: 25px 0;
+            border-bottom: 1px solid var(--border-color);
+            background-color: rgba(11, 10, 9, 0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-family: var(--font-display);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--pure-white);
+        }
+
+        .logo span {
+            color: var(--primary-blue);
+        }
+
+        .section-title h1 {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            line-height: 1.3;
+            text-align: center;
+        }
+        
+        .section-title h1 span {
+            background: -webkit-linear-gradient(45deg, var(--primary-blue), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        #actas-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-top: 40px;
+        }
+
+        .acta-card {
+            background: linear-gradient(145deg, var(--card-bg), #1a1918);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .acta-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px rgba(92, 149, 255, 0.2);
+        }
+        
+        .acta-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .acta-card h3 {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: var(--accent-blue);
+        }
+
+        .acta-card p {
+            color: #a0a0b0;
+            font-size: 1rem;
+        }
+        
+        .loader, .error-message {
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 40px;
+            color: #a0a0b0;
+        }
+
+        footer {
+            padding: 50px 0;
+            text-align: center;
+            color: #a0a0b0;
+            border-top: 1px solid var(--border-color);
+            margin-top: 80px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="container">
+            <div class="logo">Xactus<span>.</span></div>
+        </div>
+    </header>
+
+    <main>
+        <section class="section">
+            <div class="container">
+                <div class="section-title">
+                    <h1>Visor de <span>Actas</span> de Reuniones</h1>
+                </div>
+                
+                <div id="actas-container">
+                    <div class="loader">Cargando actas disponibles...</div>
+                    <div id="actas-grid"></div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Xactus. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const grid = document.getElementById('actas-grid');
+            const loader = document.querySelector('.loader');
+            const container = document.getElementById('actas-container');
+
+            const apiUrl = 'https://legaltech-n8n.vga0cw.easypanel.host/webhook/repositorios';
+            const baseRedirectUrl = 'https://kevin0naranjo.github.io/actas_reuniones/';
+
+            const fetchActas = async () => {
+                try {
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) {
+                        throw new Error(`Error en la solicitud: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    
+                    loader.style.display = 'none';
+
+                    // Asumiendo que la estructura es [{"name":["index.html", "250731.html", ...]}]
+                    const files = data[0]?.name || [];
+                    
+                    const actas = files
+                        .map(file => file.replace('.html', ''))
+                        .filter(name => name !== 'index');
+
+                    if (actas.length === 0) {
+                        showError("No se encontraron actas para mostrar.");
+                        return;
+                    }
+
+                    actas.forEach(acta => {
+                        const card = createActaCard(acta);
+                        card.addEventListener('click', () => {
+                            window.open(`${baseRedirectUrl}${acta}`, '_blank');
+                        });
+                        grid.appendChild(card);
+                    });
+
+                } catch (error) {
+                    console.error('Error al obtener las actas:', error);
+                    loader.style.display = 'none';
+                    showError("No se pudieron cargar las actas. Por favor, inténtelo más tarde.");
+                }
+            };
+            
+            const formatDate = (name) => {
+                // Asume formato YYMMDD
+                const year = `20${name.substring(0, 2)}`;
+                const month = name.substring(2, 4);
+                const day = name.substring(4, 6);
+                return `${day}/${month}/${year}`;
+            };
+
+            const createActaCard = (name) => {
+                const card = document.createElement('div');
+                card.className = 'acta-card';
+                
+                const formattedDate = formatDate(name);
+
+                card.innerHTML = `
+                    <div class="icon">📄</div>
+                    <h3>Acta de Reunión</h3>
+                    <p>Fecha: ${formattedDate}</p>
+                `;
+                return card;
+            };
+
+            const showError = (message) => {
+                 const errorMessage = document.createElement('div');
+                 errorMessage.className = 'error-message';
+                 errorMessage.textContent = message;
+                 container.appendChild(errorMessage);
+            }
+
+            fetchActas();
+        });
+    </script>
+
+</body>
+</html>
